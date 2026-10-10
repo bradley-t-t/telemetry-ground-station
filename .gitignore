@@ -1,0 +1,10 @@
+.gradle/
+build/
+out/
+flights/
+*.tlm
+.idea/
+.vscode/
+*.iml
+.fleet/
+.DS_Store

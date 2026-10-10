@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ground Station</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cellipse cx='16' cy='16' rx='13' ry='6' fill='none' stroke='%235cc8ff' stroke-width='2.5' transform='rotate(-30 16 16)'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23dce4ee'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-name">Ground Station</span>
+    <span class="flight-label" id="flight-label">No Flight</span>
+  </div>
+
+  <div class="clock-block">
+    <div class="clock" id="met" aria-label="Mission elapsed time">T&minus;00:00:00</div>
+    <div class="phase-row">
+      <span class="state-pill" id="state-pill" data-state="IDLE">Idle</span>
+      <span class="phase" id="phase">Waiting for Telemetry</span>
+    </div>
+  </div>
+
+  <div class="top-stats">
+    <div class="top-stat" id="warning-stat" data-active="false">
+      <span class="top-stat-value" id="warning-count">0</span>
+      <span class="top-stat-label">Warnings</span>
+    </div>
+    <div class="top-stat" id="caution-stat" data-active="false">
+      <span class="top-stat-value" id="caution-count">0</span>
+      <span class="top-stat-label">Cautions</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-value" id="top-rate">0</span>
+      <span class="top-stat-label">Packets/s</span>
+    </div>
+    <div class="top-stat">
+      <span class="top-stat-value" id="top-loss">0.00%</span>
+      <span class="top-stat-label">Packet Loss</span>
+    </div>
+  </div>
+
+  <form class="launch" id="launch" hidden>
+    <label class="field">
+      <span class="field-label">Scenario</span>
+      <select id="scenario"></select>
+    </label>
+    <label class="field">
+      <span class="field-label">Speed</span>
+      <select id="speed">
+        <option value="1">1x</option>
+        <option value="2">2x</option>
+        <option value="5">5x</option>
+        <option value="10">10x</option>
+      </select>
+    </label>
+    <button type="submit" class="button primary" id="launch-button">Launch</button>
+  </form>
+  <a class="button" href="/api/report" target="_blank" rel="noopener">Report</a>
+</header>
+
+<p class="scenario-note" id="scenario-note" hidden></p>
+
+<main class="console">
+  <section class="panel stage" aria-labelledby="s1-title">
+    <div class="panel-head">
+      <h2 id="s1-title"><span class="swatch s1"></span>Stage 1</h2>
+      <span class="mode-chip" id="s1-mode">Pad</span>
+    </div>
+    <div class="readouts" id="s1-readouts"></div>
+    <div class="engines">
+      <div class="subhead">
+        <span>Engines</span>
+        <span class="subhead-value" id="engine-count">0 of 9</span>
+      </div>
+      <svg class="octaweb" id="octaweb" viewBox="0 0 132 132" role="img" aria-label="Stage 1 engine status"></svg>
+      <div class="engine-legend">
+        <span><i class="dot off"></i>Off</span>
+        <span><i class="dot run"></i>Mainstage</span>
+        <span><i class="dot caution"></i>Degraded</span>
+        <span><i class="dot warning"></i>Failed</span>
+      </div>
+    </div>
+    <dl class="systems" id="s1-systems"></dl>
+  </section>
+
+  <section class="center">
+    <div class="panel chart-panel">
+      <div class="panel-head">
+        <h2>Trajectory</h2>
+        <span class="legend"><span><i class="line s1"></i>Stage 1</span><span><i class="line s2"></i>Stage 2</span></span>
+      </div>
+      <canvas class="chart tall" id="chart-trajectory"></canvas>
+    </div>
+    <div class="chart-grid">
+      <div class="panel chart-panel">
+        <div class="panel-head"><h2>Velocity</h2><span class="unit">m/s</span></div>
+        <canvas class="chart" id="chart-velocity"></canvas>
+      </div>
+      <div class="panel chart-panel">
+        <div class="panel-head"><h2>Altitude</h2><span class="unit">km</span></div>
+        <canvas class="chart" id="chart-altitude"></canvas>
+      </div>
+      <div class="panel chart-panel">
+        <div class="panel-head"><h2>Dynamic Pressure</h2><span class="unit">kPa</span></div>
+        <canvas class="chart" id="chart-q"></canvas>
+      </div>
+      <div class="panel chart-panel">
+        <div class="panel-head"><h2>Acceleration</h2><span class="unit">g</span></div>
+        <canvas class="chart" id="chart-accel"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="side">
+    <div class="panel stage" aria-labelledby="s2-title">
+      <div class="panel-head">
+        <h2 id="s2-title"><span class="swatch s2"></span>Stage 2</h2>
+        <span class="mode-chip" id="s2-mode">Stacked</span>
+      </div>
+      <div class="readouts" id="s2-readouts"></div>
+      <dl class="systems" id="s2-systems"></dl>
+    </div>
+
+    <div class="panel alarms-panel">
+      <div class="panel-head">
+        <h2>Alarms</h2>
+        <button class="button small" id="ack-all" type="button" disabled>Acknowledge All</button>
+      </div>
+      <ol class="alarm-list" id="alarms" aria-live="polite"></ol>
+    </div>
+
+    <div class="panel events-panel">
+      <div class="panel-head"><h2>Events</h2><span class="unit" id="event-count"></span></div>
+      <ol class="event-list" id="events"></ol>
+    </div>
+  </section>
+</main>
+
+<section class="lower">
+  <div class="panel link-panel">
+    <div class="panel-head"><h2>Downlink</h2><span class="unit" id="link-state"></span></div>
+    <dl class="link-stats" id="link-stats"></dl>
+    <table class="table packet-table">
+      <thead>
+        <tr><th>APID</th><th>Packet</th><th class="num">Rate</th><th class="num">Received</th><th class="num">Lost</th><th class="num">Age</th><th>Status</th></tr>
+      </thead>
+      <tbody id="packets"></tbody>
+    </table>
+  </div>
+
+  <div class="panel channels-panel">
+    <div class="panel-head">
+      <h2>Channels</h2>
+      <input class="filter" id="filter" type="search" placeholder="Filter Channels" aria-label="Filter channels">
+    </div>
+    <div class="inspector" id="inspector" hidden>
+      <div class="inspector-head">
+        <div>
+          <div class="inspector-name" id="inspector-name"></div>
+          <div class="inspector-description" id="inspector-description"></div>
+        </div>
+        <button class="button small" id="inspector-close" type="button">Close</button>
+      </div>
+      <canvas class="chart" id="chart-inspector"></canvas>
+    </div>
+    <div class="table-wrap">
+      <table class="table channel-table">
+        <thead>
+          <tr><th>Channel</th><th class="num">Value</th><th>Units</th><th>Status</th><th class="num">Caution</th><th class="num">Warning</th><th>Checked When</th><th>Description</th></tr>
+        </thead>
+        <tbody id="channels"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>

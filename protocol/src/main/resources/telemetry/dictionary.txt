@@ -1,0 +1,99 @@
+# Telemetry dictionary for the two-stage vehicle.
+#
+# "packet <apid> <name> <rate_hz> <description>" opens a packet. The rows under it are
+# its channels in wire order, big-endian, after the 12-byte CCSDS header. A rate of 0
+# means the packet is sent when something happens rather than on a schedule.
+#
+# class    sensor  = a transducer reading, watched for flatlining
+#          derived = computed by the flight computer
+#          status  = a discrete state
+# limits   red_lo yel_lo yel_hi red_hi
+# rate     largest normal |d/dt|, in units per second
+# when     the limit, rate and flatline checks run only while this holds:
+#          CHANNEL means non-zero, CHANNEL=value means equal
+#
+# A dash leaves a field unset.
+
+packet 0x010 EVENTS 0 Discrete flight events
+#  name               type class    units  red_lo  yel_lo  yel_hi  red_hi  rate  when           description
+   EVENT_CODE         u16  status   -      -       -       -       -       -     -              Flight event identifier
+   EVENT_TIME         f64  derived  s      -       -       -       -       -     -              Spacecraft clock time of the event
+   EVENT_ARG          f32  derived  -      -       -       -       -       -     -              Event-specific value
+
+packet 0x101 S1_NAV 50 Stage 1 navigation solution
+#  name               type class    units  red_lo  yel_lo  yel_hi  red_hi  rate  when           description
+   S1_ALTITUDE        f32  derived  km     -       -       -       -       -     -              Altitude above sea level
+   S1_DOWNRANGE       f32  derived  km     -       -       -       -       -     -              Ground distance from the pad
+   S1_VELOCITY        f32  derived  m/s    -       -       -       -       -     -              Inertial speed
+   S1_VERT_VEL        f32  derived  m/s    -       -       -       -       -     -              Vertical speed, positive up
+   S1_HORIZ_VEL       f32  derived  m/s    -       -       -       -       -     -              Horizontal speed, positive downrange
+   S1_FPA             f32  derived  deg    -       -       -       -       -     -              Flight path angle above the local horizontal
+   S1_ACCEL           f32  sensor   g      -       -       4.6     5.2     -     S1_MODE=1      Sensed acceleration
+   S1_DYN_PRESSURE    f32  derived  kPa    -       -       35      40      -     S1_MODE=1      Dynamic pressure
+   S1_MACH            f32  derived  -      -       -       -       -       -     -              Mach number
+
+packet 0x102 S1_PROP 25 Stage 1 propulsion
+#  name               type class    units  red_lo  yel_lo  yel_hi  red_hi  rate  when           description
+   S1_THROTTLE        f32  derived  %      -       -       -       -       -     -              Commanded throttle
+   S1_ENGINES         u8   status   -      -       -       -       -       -     -              Engines in mainstage
+   S1_ENG1_MAIN       u8   status   -      -       -       -       -       -     -              Engine 1 (center) in mainstage
+   S1_ENG2_MAIN       u8   status   -      -       -       -       -       -     -              Engine 2 in mainstage
+   S1_ENG3_MAIN       u8   status   -      -       -       -       -       -     -              Engine 3 in mainstage
+   S1_ENG4_MAIN       u8   status   -      -       -       -       -       -     -              Engine 4 in mainstage
+   S1_ENG5_MAIN       u8   status   -      -       -       -       -       -     -              Engine 5 in mainstage
+   S1_ENG6_MAIN       u8   status   -      -       -       -       -       -     -              Engine 6 in mainstage
+   S1_ENG7_MAIN       u8   status   -      -       -       -       -       -     -              Engine 7 in mainstage
+   S1_ENG8_MAIN       u8   status   -      -       -       -       -       -     -              Engine 8 in mainstage
+   S1_ENG9_MAIN       u8   status   -      -       -       -       -       -     -              Engine 9 in mainstage
+   S1_ENG1_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG1_MAIN   Engine 1 chamber pressure
+   S1_ENG2_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG2_MAIN   Engine 2 chamber pressure
+   S1_ENG3_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG3_MAIN   Engine 3 chamber pressure
+   S1_ENG4_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG4_MAIN   Engine 4 chamber pressure
+   S1_ENG5_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG5_MAIN   Engine 5 chamber pressure
+   S1_ENG6_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG6_MAIN   Engine 6 chamber pressure
+   S1_ENG7_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG7_MAIN   Engine 7 chamber pressure
+   S1_ENG8_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG8_MAIN   Engine 8 chamber pressure
+   S1_ENG9_PC         f32  sensor   bar    25      34      102     106     -     S1_ENG9_MAIN   Engine 9 chamber pressure
+   S1_LOX_TANK_P      f32  sensor   bar    2.6     3.0     4.2     4.6     -     -              LOX tank ullage pressure
+   S1_RP1_TANK_P      f32  sensor   bar    2.4     2.8     4.0     4.4     -     -              RP-1 tank ullage pressure
+   S1_COPV_P          f32  sensor   bar    40      60      -       -       5     -              Helium pressurant bottle pressure
+   S1_PROPELLANT      f32  derived  %      -       -       -       -       -     -              Propellant remaining
+
+packet 0x103 S1_AVIONICS 5 Stage 1 avionics and mechanisms
+#  name               type class    units  red_lo  yel_lo  yel_hi  red_hi  rate  when           description
+   S1_MODE            u8   status   -      -       -       -       -       -     -              Flight mode
+   S1_BUS_VOLTAGE     f32  sensor   V      25      26      30      31      -     -              Avionics bus voltage
+   S1_AVIONICS_TEMP   f32  sensor   degC   -       -       55      65      -     -              Flight computer temperature
+   S1_N2_P            f32  sensor   bar    40      60      -       -       -     -              Cold gas thruster nitrogen pressure
+   S1_GRID_FINS       u8   status   -      -       -       -       -       -     -              Grid fins deployed
+   S1_LEGS            u8   status   -      -       -       -       -       -     -              Landing legs deployed
+
+packet 0x201 S2_NAV 50 Stage 2 navigation solution
+#  name               type class    units  red_lo  yel_lo  yel_hi  red_hi  rate  when           description
+   S2_ALTITUDE        f32  derived  km     -       -       -       -       -     -              Altitude above sea level
+   S2_DOWNRANGE       f32  derived  km     -       -       -       -       -     -              Ground distance from the pad
+   S2_VELOCITY        f32  derived  m/s    -       -       -       -       -     -              Inertial speed
+   S2_VERT_VEL        f32  derived  m/s    -       -       -       -       -     -              Vertical speed, positive up
+   S2_HORIZ_VEL       f32  derived  m/s    -       -       -       -       -     -              Horizontal speed, positive downrange
+   S2_FPA             f32  derived  deg    -       -       -       -       -     -              Flight path angle above the local horizontal
+   S2_ACCEL           f32  sensor   g      -       -       4.8     5.3     -     S2_MODE=1      Sensed acceleration
+   S2_APOGEE          f32  derived  km     -       -       -       -       -     -              Apogee altitude of the current orbit
+   S2_PERIGEE         f32  derived  km     -       -       -       -       -     -              Perigee altitude of the current orbit
+
+packet 0x202 S2_PROP 25 Stage 2 propulsion
+#  name               type class    units  red_lo  yel_lo  yel_hi  red_hi  rate  when           description
+   S2_THROTTLE        f32  derived  %      -       -       -       -       -     -              Commanded throttle
+   S2_ENG_MAIN        u8   status   -      -       -       -       -       -     -              Vacuum engine in mainstage
+   S2_ENG_PC          f32  sensor   bar    25      34      102     106     -     S2_ENG_MAIN    Vacuum engine chamber pressure
+   S2_LOX_TANK_P      f32  sensor   bar    2.6     3.0     4.2     4.6     -     -              LOX tank ullage pressure
+   S2_RP1_TANK_P      f32  sensor   bar    2.4     2.8     4.0     4.4     -     -              RP-1 tank ullage pressure
+   S2_COPV_P          f32  sensor   bar    40      60      -       -       3     -              Helium pressurant bottle pressure
+   S2_NOZZLE_TEMP     f32  sensor   degC   -       -       1250    1400    -     -              Nozzle extension temperature
+   S2_PROPELLANT      f32  derived  %      -       -       -       -       -     -              Propellant remaining
+
+packet 0x203 S2_AVIONICS 5 Stage 2 avionics and mechanisms
+#  name               type class    units  red_lo  yel_lo  yel_hi  red_hi  rate  when           description
+   S2_MODE            u8   status   -      -       -       -       -       -     -              Flight mode
+   S2_BUS_VOLTAGE     f32  sensor   V      25      26      30      31      -     -              Avionics bus voltage
+   S2_AVIONICS_TEMP   f32  sensor   degC   -       -       55      65      -     -              Flight computer temperature
+   S2_FAIRING         u8   status   -      -       -       -       -       -     -              Payload fairing attached
